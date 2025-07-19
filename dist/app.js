@@ -11,4 +11,13 @@ app.use("/todos", todos_route_1.todosRouter);
 app.get('/', (req, res) => {
     res.send('Welcome to todo app');
 });
+app.use((req, res) => {
+    res.status(404).send("Route not found");
+});
+app.use((error, req, res, next) => {
+    if (error) {
+        console.log(error);
+        res.status(400).send({ message: "Something went worng" });
+    }
+});
 exports.default = app;

@@ -1,35 +1,47 @@
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
+import client from "../../config/mongodb";
+import { ObjectId } from "mongodb";
 
 const filePath = path.join(__dirname, "../../../db/todo.json");
+const database = client.db("todosDB");
+const todosCollection = database.collection("todos");
 
 export const todosRouter = express.Router();
 
-todosRouter.get("/", (req: Request, res: Response) => {
+todosRouter.get("/", async (req: Request, res: Response) => {
+    const result = await todosCollection.find().toArray();
+    res.send(result);
+})
 
-    console.log("hit");
+todosRouter.get("/:id", async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await todosCollection.findOne(query);
+    res.send(result);
 
-    const data = fs.readFileSync(filePath, { encoding: "utf-8" });
-    res.json({
-        message: "json data",
-        data
-    })
 })
 
 todosRouter.post("/create-todo", async (req: Request, res: Response) => {
-    const data = req.body;
-    console.log(data);
-    res.send("find data")
+    const todo = req.body;
+    const result = await todosCollection.insertOne(todo);
+    res.send(result);
 
 })
 
-todosRouter.put("/update-todo/:title", (req: Request, res: Response) => {
-
-    res.send("updated todo");
+todosRouter.put("/update-todo/:id", async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const newData = { $set: req.body };
+    const result = await todosCollection.updateOne(query, newData, { upsert: true });
+    res.send(result);
 })
 
-todosRouter.delete("/delete-todo/:title", (req: Request, res: Response) => {
-
+todosRouter.delete("/delete-todo/:id", async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await todosCollection.deleteOne(query);
+    res.send(result);
     res.send("deleted todo");
 })

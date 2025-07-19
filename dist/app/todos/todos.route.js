@@ -14,26 +14,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.todosRouter = void 0;
 const express_1 = __importDefault(require("express"));
-const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const mongodb_1 = __importDefault(require("../../config/mongodb"));
+const mongodb_2 = require("mongodb");
 const filePath = path_1.default.join(__dirname, "../../../db/todo.json");
+const database = mongodb_1.default.db("todosDB");
+const todosCollection = database.collection("todos");
 exports.todosRouter = express_1.default.Router();
-exports.todosRouter.get("/", (req, res) => {
-    console.log("hit");
-    const data = fs_1.default.readFileSync(filePath, { encoding: "utf-8" });
-    res.json({
-        message: "json data",
-        data
-    });
-});
-exports.todosRouter.post("/create-todo", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = req.body;
-    console.log(data);
-    res.send("find data");
+exports.todosRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield todosCollection.find().toArray();
+    res.send(result);
 }));
-exports.todosRouter.put("/update-todo/:title", (req, res) => {
-    res.send("updated todo");
-});
-exports.todosRouter.delete("/delete-todo/:title", (req, res) => {
+exports.todosRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const query = { _id: new mongodb_2.ObjectId(id) };
+    const result = yield todosCollection.findOne(query);
+    res.send(result);
+}));
+exports.todosRouter.post("/create-todo", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const todo = req.body;
+    const result = yield todosCollection.insertOne(todo);
+    res.send(result);
+}));
+exports.todosRouter.put("/update-todo/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const query = { _id: new mongodb_2.ObjectId(id) };
+    const newData = { $set: req.body };
+    const result = yield todosCollection.updateOne(query, newData, { upsert: true });
+    res.send(result);
+}));
+exports.todosRouter.delete("/delete-todo/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const query = { _id: new mongodb_2.ObjectId(id) };
+    const result = yield todosCollection.deleteOne(query);
+    res.send(result);
     res.send("deleted todo");
-});
+}));
