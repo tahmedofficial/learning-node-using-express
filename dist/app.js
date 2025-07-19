@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
-const port = 3000;
+const todos_route_1 = require("./app/todos/todos.route");
+app.use(express_1.default.json());
+app.use("/todos", todos_route_1.todosRouter);
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('Welcome to todo app');
 });
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-});
+exports.default = app;
